@@ -1,25 +1,35 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { format } from "date-fns"
-import { CalendarIcon, Clock } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { useBookingStore } from "@/lib/stores/booking-store"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { format } from "date-fns";
+import { CalendarIcon, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useBookingStore } from "@/lib/stores/booking-store";
 
 interface BookingFormProps {
-  serviceId: string
+  serviceId: string;
 }
 
 export function BookingForm({ serviceId }: BookingFormProps) {
-  const [date, setDate] = useState<Date>()
-  const [time, setTime] = useState<string>()
-  const { createBooking } = useBookingStore()
+  const [date, setDate] = useState<Date>();
+  const [time, setTime] = useState<string>();
+  const { createBooking } = useBookingStore();
 
   const timeSlots = [
     "09:00 AM",
@@ -31,21 +41,21 @@ export function BookingForm({ serviceId }: BookingFormProps) {
     "03:00 PM",
     "04:00 PM",
     "05:00 PM",
-  ]
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!date || !time) return
+    e.preventDefault();
+    if (!date || !time) return;
 
     // In a real app, you would call an API to create a booking
     createBooking({
       serviceId,
       date: date,
       time: time,
-    })
+    });
 
-    alert("Booking request submitted!")
-  }
+    alert("Booking request submitted!");
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -55,7 +65,10 @@ export function BookingForm({ serviceId }: BookingFormProps) {
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !date && "text-muted-foreground"
+              )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {date ? format(date, "PPP") : "Select date"}
@@ -102,7 +115,7 @@ export function BookingForm({ serviceId }: BookingFormProps) {
         Book Now
       </Button>
     </form>
-  )
+  );
 }
 
 function Label({ children }: { children: React.ReactNode }) {
@@ -110,5 +123,5 @@ function Label({ children }: { children: React.ReactNode }) {
     <div className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
       {children}
     </div>
-  )
+  );
 }
