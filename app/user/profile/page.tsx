@@ -145,7 +145,7 @@ export default function UserProfile() {
     <div className="min-h-screen bg-[#1a1a1a] text-white">
     
       {/* Profile Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className=" mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Profile Card */}
           <Card className="bg-[#242424] border-gray-800 md:col-span-1">
