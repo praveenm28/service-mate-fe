@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/pagination";
 import { Search } from "lucide-react";
 import { useProviderStore } from "@/lib/stores/provider-store";
+import { getFilteredProviders } from "@/app/_api/user/providers/route";
 
 export default function ProvidersPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,11 +91,17 @@ export default function ProvidersPage() {
     setCurrentPage(1); // Reset to first page on filter change
   };
 
+  useEffect(() => {
+    getFilteredProviders(1, 10, filters);
+  }, []);
+
+  
+
   return (
-    <div className="container py-8">
+    <div className="w-full py-8">
       <h1 className="text-3xl font-bold mb-6">Service Providers</h1>
 
-      <div className="flex flex-col md:flex-row gap-6 mb-8">
+      <div className="flex w-full flex-col md:flex-row gap-6 mb-8">
         <div className="w-full md:w-1/3 lg:w-1/4">
           <form onSubmit={handleSearch} className="mb-6">
             <div className="relative">
@@ -120,15 +127,15 @@ export default function ProvidersPage() {
 
         <div className="w-full md:w-2/3 lg:w-3/4">
           {isLoading ? (
-            <div className="text-center py-12">
+            <div className="w-full text-center py-12">
               <p>Loading providers...</p>
             </div>
           ) : error ? (
-            <div className="text-center py-12 text-destructive">
+            <div className="text-center w-full py-12 text-destructive">
               <p>Error loading providers. Please try again later.</p>
             </div>
           ) : paginatedProviders.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="text-center w-full py-12">
               <p>No providers found matching your criteria.</p>
               <Button
                 variant="outline"

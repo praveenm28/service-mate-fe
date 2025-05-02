@@ -73,9 +73,6 @@ export function ProviderCard({ provider }: ProviderCardProps) {
           <Button asChild variant="outline" className="flex-1">
             <Link href={`/user/providers/${provider.id}`}>View Profile</Link>
           </Button>
-          <Button asChild className="flex-1">
-            <Link href={`/user/providers/${provider.id}#services`}>See Services</Link>
-          </Button>
         </div>
       </CardFooter>
     </Card>

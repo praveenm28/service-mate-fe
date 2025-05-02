@@ -1,8 +1,11 @@
-import { ServiceFilters } from "@/components/service-filters"
-import { ServiceCard } from "@/components/service-card"
-import { Pagination } from "@/components/ui/pagination"
+"use client";
+import { ServiceFilters } from "@/components/service-filters";
+import { ServiceCard } from "@/components/service-card";
+import { Pagination } from "@/components/ui/pagination";
+import { useState } from "react";
 
 export default function ServicesPage() {
+
   return (
     <div className="container py-8">
       <h1 className="text-3xl font-bold mb-6">Browse Services</h1>
@@ -51,5 +54,5 @@ export default function ServicesPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

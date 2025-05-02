@@ -22,7 +22,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <div className="flex flex-col min-h-screen">
-            <main className="flex-1">{children}</main>
+            <main className="">{children}</main>
           </div>
         </ThemeProvider>
       </body>
