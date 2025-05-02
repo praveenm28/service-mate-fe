@@ -15,10 +15,23 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, User } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuthStore } from "@/lib/stores/auth-store"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import AuthForm from "./auth/AuthForm";
+import ServiceProviderRegistration from "./auth/ServiceProviderRegistration"
+import { useState } from "react"
 
 export function Navbar() {
   const pathname = usePathname()
   const { isAuthenticated, user, logout } = useAuthStore()
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
 
   const routes = [
     { href: "/", label: "Home" },
@@ -110,13 +123,36 @@ export function Navbar() {
               </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" asChild>
-                  <Link href="/login">Login</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/register">Sign Up</Link>
-                </Button>
-              </div>
+              {/* Login Button that triggers the modal */}
+              <Button variant="ghost" onClick={openModal}>
+                Login
+              </Button>
+        
+              {/* Modal Dialog */}
+              <Dialog open={isModalOpen} onOpenChange={closeModal}>
+                <DialogTrigger asChild>
+                  {/* This button doesn't do anything; it's here to allow the dialog to be controlled by state */}
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <AuthForm />
+                </DialogContent>
+              </Dialog>
+        
+              {/* Sign Up Button (optional) */}
+              <Button variant="ghost" onClick={openModal}>
+                Register as Service Provider
+              </Button>
+
+               {/* Modal Dialog */}
+               <Dialog open={isModalOpen} onOpenChange={closeModal}>
+                <DialogTrigger asChild>
+                  {/* This button doesn't do anything; it's here to allow the dialog to be controlled by state */}
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <ServiceProviderRegistration />
+                </DialogContent>
+              </Dialog>
+            </div>
             )}
           </nav>
         </div>
