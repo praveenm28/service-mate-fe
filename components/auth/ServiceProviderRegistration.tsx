@@ -100,7 +100,7 @@ const tags = [
 
 const days = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
 
-const ServiceProviderRegistration = () => {
+ export const ServiceProviderRegistration = () => {
     const router = useRouter();
     const [showDialog, setShowDialog] = useState(true);
     const [selectedDay, setSelectedDay] = useState<string | null>(null);
