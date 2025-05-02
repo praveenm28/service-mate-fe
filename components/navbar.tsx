@@ -24,6 +24,8 @@ export function Navbar() {
   const pathname = usePathname()
   const { isAuthenticated, user, logout } = useAuthStore()
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoginOpen, setLoginOpen] = useState(false);
+  const [isRegisterOpen, setRegisterOpen] = useState(false);
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -123,36 +125,28 @@ export function Navbar() {
               </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
-              {/* Login Button that triggers the modal */}
-              <Button variant="ghost" onClick={openModal}>
-                Login
-              </Button>
-        
-              {/* Modal Dialog */}
-              <Dialog open={isModalOpen} onOpenChange={closeModal}>
-                <DialogTrigger asChild>
-                  {/* This button doesn't do anything; it's here to allow the dialog to be controlled by state */}
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <AuthForm />
-                </DialogContent>
-              </Dialog>
-        
-              {/* Sign Up Button (optional) */}
-              <Button variant="ghost" onClick={openModal}>
-                Register as Service Provider
-              </Button>
+                {/* Login Button */}
+                <Button variant="ghost" onClick={() => setLoginOpen(true)}>
+                  Login
+                </Button>
+                <Dialog open={isLoginOpen} onOpenChange={setLoginOpen}>
+                  <DialogTrigger asChild />
+                  <DialogContent className="max-w-md">
+                    <AuthForm />
+                  </DialogContent>
+                </Dialog>
 
-               {/* Modal Dialog */}
-               <Dialog open={isModalOpen} onOpenChange={closeModal}>
-                <DialogTrigger asChild>
-                  {/* This button doesn't do anything; it's here to allow the dialog to be controlled by state */}
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <ServiceProviderRegistration />
-                </DialogContent>
-              </Dialog>
-            </div>
+                {/* Register as Service Provider Button */}
+                <Button variant="ghost" onClick={() => setRegisterOpen(true)}>
+                  Register as Service Provider
+                </Button>
+                <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
+                  <DialogTrigger asChild />
+                  <DialogContent className="max-w-md">
+                    <ServiceProviderRegistration />
+                  </DialogContent>
+                </Dialog>
+              </div>
             )}
           </nav>
         </div>
