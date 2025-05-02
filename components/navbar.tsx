@@ -15,10 +15,25 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, User } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuthStore } from "@/lib/stores/auth-store"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import AuthForm from "./auth/AuthForm";
+import ServiceProviderRegistration from "./auth/ServiceProviderRegistration"
+import { useState } from "react"
 
 export function Navbar() {
   const pathname = usePathname()
   const { isAuthenticated, user, logout } = useAuthStore()
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoginOpen, setLoginOpen] = useState(false);
+  const [isRegisterOpen, setRegisterOpen] = useState(false);
+
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
 
   const routes = [
     { href: "/", label: "Home" },
@@ -110,12 +125,27 @@ export function Navbar() {
               </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" asChild>
-                  <Link href="/login">Login</Link>
+                {/* Login Button */}
+                <Button variant="ghost" onClick={() => setLoginOpen(true)}>
+                  Login
                 </Button>
-                <Button asChild>
-                  <Link href="/register">Sign Up</Link>
+                <Dialog open={isLoginOpen} onOpenChange={setLoginOpen}>
+                  <DialogTrigger asChild />
+                  <DialogContent className="max-w-md">
+                    <AuthForm />
+                  </DialogContent>
+                </Dialog>
+
+                {/* Register as Service Provider Button */}
+                <Button variant="ghost" onClick={() => setRegisterOpen(true)}>
+                  Register as Service Provider
                 </Button>
+                <Dialog open={isRegisterOpen} onOpenChange={setRegisterOpen}>
+                  <DialogTrigger asChild />
+                  <DialogContent className="max-w-md">
+                    <ServiceProviderRegistration />
+                  </DialogContent>
+                </Dialog>
               </div>
             )}
           </nav>
