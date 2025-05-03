@@ -8,6 +8,12 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'service-mate.s3.ap-south-1.amazonaws.com',
+      }
+    ]
   },
 }
 

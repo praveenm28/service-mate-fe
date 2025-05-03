@@ -18,16 +18,6 @@ export function AdminHeader() {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:h-16 sm:px-6 lg:px-8">
       <div className="hidden md:block">
-        <form>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-64 rounded-lg bg-background pl-8 shadow-none sm:w-80 md:w-96"
-            />
-          </div>
-        </form>
       </div>
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
