@@ -23,4 +23,5 @@ export interface ServiceProvider {
   workingTimeRespones: WorkingTimeResponse[];
   verified: boolean;
   availableForEmergency: boolean;
+  businessName: string;
 }

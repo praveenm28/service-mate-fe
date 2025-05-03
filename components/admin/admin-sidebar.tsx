@@ -63,7 +63,7 @@ export function AdminSidebar() {
   ]
 
   return (
-    <div className="flex h-full max-h-screen flex-col border-r bg-muted/40">
+    <div className="flex h-full max-h-full flex-col border-r bg-muted/40">
       <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
         <Link href="/admin" className="flex items-center gap-2 font-semibold">
           <Package2 className="h-6 w-6" />
