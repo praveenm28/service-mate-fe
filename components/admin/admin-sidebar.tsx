@@ -7,7 +7,7 @@ import {
   Users,
   ShoppingCart,
   Calendar,
-  MessageSquare,
+  MapPin,
   FolderTree,
   Settings,
   Star,
@@ -51,9 +51,9 @@ export function AdminSidebar() {
       title: "Categories",
     },
     {
-      href: "/admin/messages",
-      icon: MessageSquare,
-      title: "Messages",
+      href: "/admin/city",
+      icon:  MapPin,
+      title: "City",
     },
     {
       href: "/admin/settings",
