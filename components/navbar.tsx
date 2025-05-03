@@ -36,18 +36,18 @@ export function Navbar() {
   };
 
   const routes = [
-    { href: "/", label: "Home" },
-    { href: "/services", label: "Services" },
-    { href: "/providers", label: "Providers" },
-    { href: "/about", label: "About" },
+    { href: "/user", label: "Home" },
+    { href: "/user/services", label: "Services" },
+    { href: "/user/providers", label: "Providers" },
+    { href: "/user/about", label: "About" },
   ]
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <div className="mr-4 hidden md:flex">
+      <div className=" flex h-16 items-center justify-between px-4">
+        <div className="mr-4 hidden md:flex ">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <span className="font-bold text-xl">ServiceHub</span>
+            <span className="font-bold text-xl">ServiceMate</span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             {routes.map((route) => (
@@ -95,7 +95,7 @@ export function Navbar() {
           </SheetContent>
         </Sheet>
 
-        <div className="flex flex-1 items-center justify-end space-x-4">
+        <div className="flex items-center justify-end space-x-4">
           <nav className="flex items-center space-x-2">
             <ThemeToggle />
 

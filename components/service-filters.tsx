@@ -1,16 +1,24 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Slider } from "@/components/ui/slider"
-import { Filter } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Slider } from "@/components/ui/slider";
+import { Filter } from "lucide-react";
+import { Dispatch } from "react";
+import { SetStateAction } from "react";
+import { useEffect } from "react";
+import { getCategories } from "@/app/_api/categories/route";
 
-export function ServiceFilters() {
-  const [priceRange, setPriceRange] = useState([20, 200])
+export function ServiceFilters(setFilter: Dispatch<SetStateAction<{}>>) {
+  const [priceRange, setPriceRange] = useState([20, 200]);
+
+  useEffect(() => {
+    getCategories();
+  }, []);
 
   const categories = [
     { id: "cleaning", label: "Cleaning" },
@@ -19,14 +27,14 @@ export function ServiceFilters() {
     { id: "landscaping", label: "Landscaping" },
     { id: "painting", label: "Painting" },
     { id: "assembly", label: "Furniture Assembly" },
-  ]
+  ];
 
   const ratings = [
     { id: "any", label: "Any Rating" },
     { id: "4plus", label: "4+ Stars" },
     { id: "4.5plus", label: "4.5+ Stars" },
     { id: "5", label: "5 Stars Only" },
-  ]
+  ];
 
   return (
     <Card>
@@ -52,7 +60,13 @@ export function ServiceFilters() {
         <div className="space-y-4">
           <h3 className="font-medium">Price Range</h3>
           <div className="space-y-4">
-            <Slider value={priceRange} min={0} max={300} step={10} onValueChange={setPriceRange} />
+            <Slider
+              value={priceRange}
+              min={0}
+              max={300}
+              step={10}
+              onValueChange={setPriceRange}
+            />
             <div className="flex items-center justify-between">
               <span>${priceRange[0]}</span>
               <span>${priceRange[1]}</span>
@@ -75,5 +89,5 @@ export function ServiceFilters() {
         <Button className="w-full">Apply Filters</Button>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -17,63 +17,52 @@ import {
 } from "@/components/ui/pagination";
 import { Search } from "lucide-react";
 import { useProviderStore } from "@/lib/stores/provider-store";
+import { getFilteredProviders } from "@/app/_api/user/providers/route";
+import { useMemo } from "react";
 
 export default function ProvidersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState({
-    category: "all",
-    rating: "all",
-    sortBy: "rating",
+  const [filters, setFilters] = useState<{
+    date?: string;
+    isVerified?: boolean;
+    minFee?: number;
+    maxFee?: number;
+    day?: string;
+    cityId?: number;
+    categoryId?: number;
+    tagId?: number;
+    search?: string;
+    avgRatings?: number[];
+  }>({
+    date: undefined,
+    isVerified: undefined,
+    minFee: undefined,
+    maxFee: undefined,
+    day: undefined,
+    cityId: undefined,
+    categoryId: undefined,
+    tagId: undefined,
+    search: undefined,
+    avgRatings: undefined,
   });
 
-  const { providers, isLoading, error, fetchProviders } = useProviderStore();
+  console.log("🚀 ~ ProvidersPage ~ filters:", filters)
+
+
+  const { providers, isLoading, error, setProviders } =
+    useProviderStore();
 
   // Items per page
   const itemsPerPage = 9;
 
-  useEffect(() => {
-    fetchProviders();
-  }, [fetchProviders]);
-
-  // Filter and search providers
-  const filteredProviders = providers.filter((provider) => {
-    // Search filter
-    const matchesSearch =
-      searchQuery === "" ||
-      provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      provider.description.toLowerCase().includes(searchQuery.toLowerCase());
-
-    // Category filter
-    const matchesCategory =
-      filters.category === "all" ||
-      provider.categories.includes(filters.category);
-
-    // Rating filter
-    const matchesRating =
-      filters.rating === "all" ||
-      (filters.rating === "4plus" && provider.rating >= 4) ||
-      (filters.rating === "4.5plus" && provider.rating >= 4.5) ||
-      (filters.rating === "5" && provider.rating === 5);
-
-    return matchesSearch && matchesCategory && matchesRating;
-  });
-
-  // Sort providers
-  const sortedProviders = [...filteredProviders].sort((a, b) => {
-    if (filters.sortBy === "rating") {
-      return b.rating - a.rating;
-    } else if (filters.sortBy === "jobs") {
-      return b.completedJobs - a.completedJobs;
-    } else if (filters.sortBy === "newest") {
-      return new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime();
-    }
-    return 0;
-  });
+  // useEffect(() => {
+  //   fetchProviders();
+  // }, [fetchProviders]);
 
   // Paginate providers
-  const totalPages = Math.ceil(sortedProviders.length / itemsPerPage);
-  const paginatedProviders = sortedProviders.slice(
+  const totalPages = Math.ceil(providers.length / itemsPerPage);
+  const paginatedProviders = providers.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -90,11 +79,21 @@ export default function ProvidersPage() {
     setCurrentPage(1); // Reset to first page on filter change
   };
 
+  useEffect(() => {
+    getFilteredProviders(1, 10, filters).then((data) => {
+      if (!data?.success) {
+        console.error("Error fetching providers:", data);
+      } else {
+        setProviders(data);
+      }
+    });
+  }, [filters]);
+
   return (
-    <div className="container py-8">
+    <div className="w-full py-8">
       <h1 className="text-3xl font-bold mb-6">Service Providers</h1>
 
-      <div className="flex flex-col md:flex-row gap-6 mb-8">
+      <div className="flex w-full flex-col md:flex-row gap-6 mb-8">
         <div className="w-full md:w-1/3 lg:w-1/4">
           <form onSubmit={handleSearch} className="mb-6">
             <div className="relative">
@@ -104,7 +103,9 @@ export default function ProvidersPage() {
                 placeholder="Search providers..."
                 className="pl-8 w-full"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) =>
+                  setFilters({ ...filters, search: e.target.value })
+                }
               />
               <Button type="submit" className="sr-only">
                 Search
@@ -120,15 +121,15 @@ export default function ProvidersPage() {
 
         <div className="w-full md:w-2/3 lg:w-3/4">
           {isLoading ? (
-            <div className="text-center py-12">
+            <div className="w-full text-center py-12">
               <p>Loading providers...</p>
             </div>
           ) : error ? (
-            <div className="text-center py-12 text-destructive">
+            <div className="text-center w-full py-12 text-destructive">
               <p>Error loading providers. Please try again later.</p>
             </div>
           ) : paginatedProviders.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="text-center w-full py-12">
               <p>No providers found matching your criteria.</p>
               <Button
                 variant="outline"
@@ -136,9 +137,16 @@ export default function ProvidersPage() {
                 onClick={() => {
                   setSearchQuery("");
                   setFilters({
-                    category: "all",
-                    rating: "all",
-                    sortBy: "rating",
+                    categoryId: undefined,
+                    cityId: undefined,
+                    date: undefined,
+                    day: undefined,
+                    isVerified: undefined,
+                    maxFee: undefined,
+                    minFee: undefined,
+                    search: undefined,
+                    tagId: undefined,
+                    avgRatings: undefined,
                   });
                 }}
               >

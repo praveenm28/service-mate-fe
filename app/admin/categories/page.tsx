@@ -1,11 +1,18 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,100 +20,189 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { MoreHorizontal, Plus, Search } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { FolderX, Loader, MoreHorizontal, Plus, Search } from "lucide-react";
+import { useAdminCategoryStore } from "@/lib/stores/admin/admin-category-store";
+import {
+  archiveCategory,
+  createCategory,
+  getAdminCategories,
+  updateCategory,
+} from "@/app/_api/admin/category/route";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { toast } from "sonner";
+import { CategoryRespone } from "@/lib/types/CategoryResponse";
+import Image from "next/image";
+import { useDebounce } from "@/hooks/debounce";
+
+const formSchema = z.object({
+  name: z
+    .string({ required_error: "Category name is required" })
+    .min(3, { message: "Category name must be at least 3 characters" }),
+  image: z
+    .instanceof(File)
+    .refine(
+      (file) => file.size <= 5 * 1024 * 1024, // 5MB max
+      { message: "Image must be less than 5MB" }
+    )
+    .refine(
+      (file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type),
+      { message: "Only JPEG, PNG, and WEBP formats are supported" }
+    ),
+});
 
 export default function CategoriesPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [newCategory, setNewCategory] = useState({
-    name: "",
-    description: "",
-    icon: "",
-  })
+  const initialLoad = useRef(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingCategory, setEditingCategory] =
+    useState<CategoryRespone | null>(null);
+  const {
+    categoryLoading,
+    categories,
+    paginationOptions,
+    setPaginationOptions,
+    setCategories,
+    createdCategory,
+    setCreatedCategory,
+  } = useAdminCategoryStore();
 
-  // Mock category data - in a real app, this would come from an API
-  const categories = [
-    {
-      id: "c1",
-      name: "Cleaning",
-      description: "Home and office cleaning services",
-      icon: "🧹",
-      services: 12,
-      status: "active",
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: undefined,
+      image: undefined,
     },
-    {
-      id: "c2",
-      name: "Plumbing",
-      description: "Plumbing repair and installation services",
-      icon: "🔧",
-      services: 8,
-      status: "active",
-    },
-    {
-      id: "c3",
-      name: "Electrical",
-      description: "Electrical repair and installation services",
-      icon: "⚡",
-      services: 6,
-      status: "active",
-    },
-    {
-      id: "c4",
-      name: "Landscaping",
-      description: "Lawn care and landscaping services",
-      icon: "🌱",
-      services: 9,
-      status: "active",
-    },
-    {
-      id: "c5",
-      name: "Assembly",
-      description: "Furniture and equipment assembly services",
-      icon: "🪑",
-      services: 5,
-      status: "active",
-    },
-    {
-      id: "c6",
-      name: "Painting",
-      description: "Interior and exterior painting services",
-      icon: "🎨",
-      services: 7,
-      status: "active",
-    },
-    {
-      id: "c7",
-      name: "Moving",
-      description: "Moving and packing services",
-      icon: "📦",
-      services: 4,
-      status: "inactive",
-    },
-  ]
+  });
 
-  // Filter categories based on search query
-  const filteredCategories = categories.filter(
-    (category) =>
-      searchQuery === "" ||
-      category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      category.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  const handleAddCategory = (values: z.infer<typeof formSchema>) => {
+    setSaveLoading(true);
+    createCategory(values).then((res) => {
+      if (res?.success) {
+        toast.success(res.message);
+        setCreatedCategory(res);
+        setShowAddForm(false);
+        form.reset();
+      } else {
+        toast.error(res.message);
+      }
+      setSaveLoading(false);
+    });
+  };
 
-  const handleAddCategory = (e: React.FormEvent) => {
-    e.preventDefault()
-    // In a real app, you would call an API to add the category
-    console.log("Adding category:", newCategory)
-    setNewCategory({ name: "", description: "", icon: "" })
-    setShowAddForm(false)
-  }
+  const handleUpdateCategory = (values: z.infer<typeof formSchema>) => {
+    setSaveLoading(true);
+    updateCategory(editingCategory?.id || 0, values).then((res) => {
+      if (res?.success) {
+        setEditingCategory(null);
+        toast.success(res.message);
+        setCreatedCategory(res);
+        setShowAddForm(false);
+        form.reset();
+      } else {
+        toast.error(res.message);
+      }
+      setSaveLoading(false);
+    });
+  };
+
+  const handleArchiveCategory = (id: number) => {
+    archiveCategory(id).then((res) => {
+      if (res?.success) {
+        setCreatedCategory(res);
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
+    });
+  };
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await getAdminCategories(
+          paginationOptions.pageCount,
+          paginationOptions.pageSize
+        );
+
+        setCategories(res?.records);
+        setPaginationOptions({
+          pageCount: res?.pageNumber,
+          pageSize: res?.pageSize,
+          totalRecords: res?.totalRecords,
+          totalPages: res?.totalPages,
+        });
+      } catch (error) {
+        toast.error("Failed to fetch categories");
+      }
+    };
+
+    if (initialLoad.current) {
+      // Initial load
+      fetchCategories();
+      initialLoad.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!initialLoad.current) {
+      const fetchCategories = async () => {
+        try {
+          const res = await getAdminCategories(
+            paginationOptions.pageCount,
+            paginationOptions.pageSize
+          );
+
+          setCategories(res?.records);
+          // Don't update pageCount here to avoid loop
+          setPaginationOptions({
+            ...paginationOptions,
+            pageSize: res?.pageSize,
+            totalRecords: res?.totalRecords,
+            totalPages: res?.totalPages,
+          });
+        } catch (error) {
+          toast.error("Failed to fetch categories");
+        }
+      };
+
+      fetchCategories();
+    }
+  }, [paginationOptions.pageCount, createdCategory]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 flex flex-col flex-grow">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Categories</h1>
         <Button onClick={() => setShowAddForm(!showAddForm)}>
@@ -117,53 +213,159 @@ export default function CategoriesPage() {
 
       {showAddForm && (
         <Card>
-          <form onSubmit={handleAddCategory}>
-            <CardHeader>
-              <CardTitle>Add New Category</CardTitle>
-              <CardDescription>Create a new service category for the platform</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Category Name</Label>
-                <Input
-                  id="name"
-                  value={newCategory.name}
-                  onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-                  placeholder="e.g. Home Cleaning"
-                  required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleAddCategory)}>
+              <CardHeader>
+                <CardTitle>Add New Category</CardTitle>
+                <CardDescription>
+                  Create a new service category for the platform
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Home Cleaning" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="icon">Icon (Emoji)</Label>
-                <Input
-                  id="icon"
-                  value={newCategory.icon}
-                  onChange={(e) => setNewCategory({ ...newCategory, icon: e.target.value })}
-                  placeholder="e.g. 🧹"
+
+                <FormField
+                  control={form.control}
+                  name="image"
+                  render={({ field: { value, onChange, ...fieldProps } }) => (
+                    <FormItem>
+                      <FormLabel>Category Image</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          {...fieldProps}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            onChange(file);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={newCategory.description}
-                  onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
-                  placeholder="Brief description of the category"
-                  required
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" type="button" onClick={() => setShowAddForm(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">Save Category</Button>
-            </CardFooter>
-          </form>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => {
+                    form.reset();
+                    setShowAddForm(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button disabled={saveLoading} type="submit">
+                  {saveLoading ? (
+                    <Loader className="animate-spin size-4" />
+                  ) : (
+                    "Save Category"
+                  )}
+                </Button>
+              </CardFooter>
+            </form>
+          </Form>
         </Card>
       )}
 
-      <div className="flex w-full max-w-sm items-center space-x-2">
+      {editingCategory && (
+        <Card>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleUpdateCategory)}>
+              <CardHeader>
+                <CardTitle>Edit Category</CardTitle>
+                <CardDescription>Update the category details</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Home Cleaning" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="image"
+                  render={({ field: { value, onChange, ...fieldProps } }) => (
+                    <FormItem>
+                      <FormLabel>Category Image</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          {...fieldProps}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            onChange(file);
+                          }}
+                        />
+                      </FormControl>
+                      {editingCategory.image && !value && (
+                        <div className="mt-2">
+                          <p className="text-sm text-muted-foreground">
+                            Current Image:
+                          </p>
+                          <Image
+                            src={editingCategory.image}
+                            alt="Current category"
+                            width={80}
+                            height={80}
+                            className="h-20 w-20 object-cover rounded"
+                          />
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => {
+                    form.reset();
+                    setEditingCategory(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button disabled={saveLoading} type="submit">
+                  {saveLoading ? (
+                    <Loader className="animate-spin size-4" />
+                  ) : (
+                    "Update Category"
+                  )}
+                </Button>
+              </CardFooter>
+            </form>
+          </Form>
+        </Card>
+      )}
+
+      {/* No need for category but need to implement in other modules */}
+      {/* <div className="flex w-full max-w-sm items-center space-x-2">
         <Input
           placeholder="Search categories..."
           value={searchQuery}
@@ -174,77 +376,138 @@ export default function CategoriesPage() {
           <Search className="h-4 w-4" />
           <span className="sr-only">Search</span>
         </Button>
-      </div>
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Icon</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Services</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredCategories.map((category) => (
-              <TableRow key={category.id}>
-                <TableCell className="text-2xl">{category.icon}</TableCell>
-                <TableCell className="font-medium">{category.name}</TableCell>
-                <TableCell>{category.description}</TableCell>
-                <TableCell>{category.services}</TableCell>
-                <TableCell>
-                  <StatusBadge status={category.status} />
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Actions</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>Edit Category</DropdownMenuItem>
-                      <DropdownMenuItem>View Services</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {category.status === "active" ? (
-                        <DropdownMenuItem>Deactivate Category</DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem>Activate Category</DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem className="text-destructive">Delete Category</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      </div> */}
+      {categoryLoading ? (
+        <div className="flex flex-grow items-center justify-center py-32">
+          <Loader className="size-10 animate-spin" />
+        </div>
+      ) : (
+        <>
+          <div className="rounded-md border flex flex-col">
+            <Table className="flex-grow">
+              {categories?.length > 0 ? (
+                <>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {categories.map((category) => (
+                      <TableRow key={category.id}>
+                        <TableCell className="font-medium">
+                          {category.name}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={category.active} />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setEditingCategory(category);
+                                  form.reset({
+                                    name: category.name,
+                                    image: undefined,
+                                  });
+                                }}
+                              >
+                                Edit Category
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {category.active ? (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleArchiveCategory(category.id)
+                                  }
+                                  className="text-destructive"
+                                >
+                                  Archive Category
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleArchiveCategory(category.id)
+                                  }
+                                >
+                                  Activate Category
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </>
+              ) : (
+                <div className="flex-grow font-semibold flex flex-col gap-4 py-20 items-center justify-center">
+                  <FolderX className="size-12" />
+                  <div>No categories found</div>
+                </div>
+              )}
+            </Table>
+          </div>
+          {categories.length > 0 && (
+            <Pagination>
+              <PaginationContent>
+                {Array.from({ length: paginationOptions?.totalPages }).map(
+                  (_, i) => {
+                    return (
+                      <PaginationItem
+                        onClick={() => {
+                          if (i + 1 !== paginationOptions?.pageCount)
+                            setPaginationOptions({
+                              ...paginationOptions,
+                              pageCount: i + 1,
+                            });
+                        }}
+                        key={i}
+                      >
+                        <PaginationLink
+                          isActive={paginationOptions?.pageCount === i + 1}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  }
+                )}
+              </PaginationContent>
+            </Pagination>
+          )}
+        </>
+      )}
     </div>
-  )
+  );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  let variant: "default" | "secondary" | "destructive" | "outline" = "outline"
+function StatusBadge({ status }: { status: Boolean }) {
+  let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
 
   switch (status) {
-    case "active":
-      variant = "default"
-      break
-    case "inactive":
-      variant = "outline"
-      break
+    case true:
+      variant = "default";
+      break;
+    case false:
+      variant = "outline";
+      break;
   }
 
   return (
     <Badge variant={variant} className="capitalize">
-      {status}
+      {status ? "Active" : "Inactive"}
     </Badge>
-  )
+  );
 }
