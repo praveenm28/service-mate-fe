@@ -18,63 +18,51 @@ import {
 import { Search } from "lucide-react";
 import { useProviderStore } from "@/lib/stores/provider-store";
 import { getFilteredProviders } from "@/app/_api/user/providers/route";
+import { useMemo } from "react";
 
 export default function ProvidersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState({
-    category: "all",
-    rating: "all",
-    sortBy: "rating",
+  const [filters, setFilters] = useState<{
+    date?: string;
+    isVerified?: boolean;
+    minFee?: number;
+    maxFee?: number;
+    day?: string;
+    cityId?: number;
+    categoryId?: number;
+    tagId?: number;
+    search?: string;
+    avgRatings?: number[];
+  }>({
+    date: undefined,
+    isVerified: undefined,
+    minFee: undefined,
+    maxFee: undefined,
+    day: undefined,
+    cityId: undefined,
+    categoryId: undefined,
+    tagId: undefined,
+    search: undefined,
+    avgRatings: undefined,
   });
 
-  const { providers, isLoading, error, fetchProviders } = useProviderStore();
+  console.log("🚀 ~ ProvidersPage ~ filters:", filters)
+
+
+  const { providers, isLoading, error, setProviders } =
+    useProviderStore();
 
   // Items per page
   const itemsPerPage = 9;
 
-  useEffect(() => {
-    fetchProviders();
-  }, [fetchProviders]);
-
-  // Filter and search providers
-  const filteredProviders = providers.filter((provider) => {
-    // Search filter
-    const matchesSearch =
-      searchQuery === "" ||
-      provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      provider.description.toLowerCase().includes(searchQuery.toLowerCase());
-
-    // Category filter
-    const matchesCategory =
-      filters.category === "all" ||
-      provider.categories.includes(filters.category);
-
-    // Rating filter
-    const matchesRating =
-      filters.rating === "all" ||
-      (filters.rating === "4plus" && provider.rating >= 4) ||
-      (filters.rating === "4.5plus" && provider.rating >= 4.5) ||
-      (filters.rating === "5" && provider.rating === 5);
-
-    return matchesSearch && matchesCategory && matchesRating;
-  });
-
-  // Sort providers
-  const sortedProviders = [...filteredProviders].sort((a, b) => {
-    if (filters.sortBy === "rating") {
-      return b.rating - a.rating;
-    } else if (filters.sortBy === "jobs") {
-      return b.completedJobs - a.completedJobs;
-    } else if (filters.sortBy === "newest") {
-      return new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime();
-    }
-    return 0;
-  });
+  // useEffect(() => {
+  //   fetchProviders();
+  // }, [fetchProviders]);
 
   // Paginate providers
-  const totalPages = Math.ceil(sortedProviders.length / itemsPerPage);
-  const paginatedProviders = sortedProviders.slice(
+  const totalPages = Math.ceil(providers.length / itemsPerPage);
+  const paginatedProviders = providers.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -92,10 +80,14 @@ export default function ProvidersPage() {
   };
 
   useEffect(() => {
-    getFilteredProviders(1, 10, filters);
-  }, []);
-
-  
+    getFilteredProviders(1, 10, filters).then((data) => {
+      if (!data?.success) {
+        console.error("Error fetching providers:", data);
+      } else {
+        setProviders(data);
+      }
+    });
+  }, [filters]);
 
   return (
     <div className="w-full py-8">
@@ -111,7 +103,9 @@ export default function ProvidersPage() {
                 placeholder="Search providers..."
                 className="pl-8 w-full"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) =>
+                  setFilters({ ...filters, search: e.target.value })
+                }
               />
               <Button type="submit" className="sr-only">
                 Search
@@ -143,9 +137,16 @@ export default function ProvidersPage() {
                 onClick={() => {
                   setSearchQuery("");
                   setFilters({
-                    category: "all",
-                    rating: "all",
-                    sortBy: "rating",
+                    categoryId: undefined,
+                    cityId: undefined,
+                    date: undefined,
+                    day: undefined,
+                    isVerified: undefined,
+                    maxFee: undefined,
+                    minFee: undefined,
+                    search: undefined,
+                    tagId: undefined,
+                    avgRatings: undefined,
                   });
                 }}
               >

@@ -22,6 +22,8 @@ export async function getFilteredProviders(
         pageCount,
         pageSize,
         ...filters,
+        avgRatings: filters?.avgRatings ? filters.avgRatings?.join(",") : undefined,
+        isActive: true,
       },
     });
     return response.data;
