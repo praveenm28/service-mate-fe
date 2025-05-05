@@ -41,13 +41,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FolderX, Loader, MoreHorizontal, Plus, Search } from "lucide-react";
-import { useAdminCategoryStore } from "@/lib/stores/admin/admin-category-store";
+import { useAdminTagStore } from "@/lib/stores/admin/admin-tag-store";
 import {
-  archiveCategory,
-  createCategory,
-  getAdminCategories,
-  updateCategory,
-} from "@/app/_api/admin/category/route";
+  archiveTag,
+  createTag,
+  getAdminTags,
+  updateTag,
+} from "@/app/_api/admin/tag/route";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -60,24 +60,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { CategoryRespone } from "@/lib/types/CategoryResponse";
-import Image from "next/image";
-import { useDebounce } from "@/hooks/debounce";
+import { TagRespone } from "@/lib/types/TagResponse";
 
 const formSchema = z.object({
   name: z
-    .string({ required_error: "Category name is required" })
-    .min(3, { message: "Category name must be at least 3 characters" }),
-  image: z
-    .instanceof(File)
-    .refine(
-      (file) => file.size <= 5 * 1024 * 1024, // 5MB max
-      { message: "Image must be less than 5MB" }
-    )
-    .refine(
-      (file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type),
-      { message: "Only JPEG, PNG, and WEBP formats are supported" }
-    ),
+    .string({ required_error: "tag name is required" })
+    .min(3, { message: "tag name must be at least 3 characters" }),
 });
 
 export default function CategoriesPage() {
@@ -86,32 +74,32 @@ export default function CategoriesPage() {
   // const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [saveLoading, setSaveLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingCategory, setEditingCategory] =
-    useState<CategoryRespone | null>(null);
+  const [editingtag, setEditingtag] =
+    useState<TagRespone | null>(null);
   const {
-    categoryLoading,
-    categories,
+    tagLoading,
+    tags,
     paginationOptions,
     setPaginationOptions,
-    setCategories,
-    createdCategory,
-    setCreatedCategory,
-  } = useAdminCategoryStore();
+    setTags,
+    createdTag,
+    setCreatedTag,
+  } = useAdminTagStore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: undefined,
-      image: undefined,
     },
   });
 
-  const handleAddCategory = (values: z.infer<typeof formSchema>) => {
+  const handleAddtag = (values: z.infer<typeof formSchema>) => {
+    debugger
     setSaveLoading(true);
-    createCategory(values).then((res) => {
+    createTag(values).then((res) => {
       if (res?.success) {
         toast.success(res.message);
-        setCreatedCategory(res);
+        setCreatedTag(res);
         setShowAddForm(false);
         form.reset();
       } else {
@@ -121,13 +109,13 @@ export default function CategoriesPage() {
     });
   };
 
-  const handleUpdateCategory = (values: z.infer<typeof formSchema>) => {
+  const handleUpdatetag = (values: z.infer<typeof formSchema>) => {
     setSaveLoading(true);
-    updateCategory(editingCategory?.id || 0, values).then((res) => {
+    updateTag(editingtag?.id || 0, values).then((res) => {
       if (res?.success) {
-        setEditingCategory(null);
+        setEditingtag(null);
         toast.success(res.message);
-        setCreatedCategory(res);
+        setCreatedTag(res);
         setShowAddForm(false);
         form.reset();
       } else {
@@ -137,10 +125,10 @@ export default function CategoriesPage() {
     });
   };
 
-  const handleArchiveCategory = (id: number) => {
-    archiveCategory(id).then((res) => {
+  const handleArchivetag = (id: number) => {
+    archiveTag(id).then((res) => {
       if (res?.success) {
-        setCreatedCategory(res);
+        setCreatedTag(res);
         toast.success(res.message);
       } else {
         toast.error(res.message);
@@ -151,12 +139,12 @@ export default function CategoriesPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await getAdminCategories(
+        const res = await getAdminTags(
           paginationOptions.pageCount,
           paginationOptions.pageSize
         );
 
-        setCategories(res?.records);
+        setTags(res?.records);
         setPaginationOptions({
           pageCount: res?.pageNumber,
           pageSize: res?.pageSize,
@@ -179,12 +167,12 @@ export default function CategoriesPage() {
     if (!initialLoad.current) {
       const fetchCategories = async () => {
         try {
-          const res = await getAdminCategories(
+          const res = await getAdminTags(
             paginationOptions.pageCount,
             paginationOptions.pageSize
           );
 
-          setCategories(res?.records);
+          setTags(res?.records);
           // Don't update pageCount here to avoid loop
           setPaginationOptions({
             ...paginationOptions,
@@ -199,26 +187,26 @@ export default function CategoriesPage() {
 
       fetchCategories();
     }
-  }, [paginationOptions.pageCount, createdCategory]);
+  }, [paginationOptions.pageCount, createdTag]);
 
   return (
     <div className="space-y-6 flex flex-col flex-grow">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Categories</h1>
+        <h1 className="text-3xl font-bold">Tags</h1>
         <Button onClick={() => setShowAddForm(!showAddForm)}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Category
+          Add Tag
         </Button>
       </div>
 
       {showAddForm && (
         <Card>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleAddCategory)}>
+            <form onSubmit={form.handleSubmit(handleAddtag)}>
               <CardHeader>
-                <CardTitle>Add New Category</CardTitle>
+                <CardTitle>Add New Tag</CardTitle>
                 <CardDescription>
-                  Create a new service category for the platform
+                  Create a new service tag for the platform
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -227,31 +215,9 @@ export default function CategoriesPage() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category Name</FormLabel>
+                      <FormLabel>tag Name</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. Home Cleaning" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="image"
-                  render={({ field: { value, onChange, ...fieldProps } }) => (
-                    <FormItem>
-                      <FormLabel>Category Image</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          {...fieldProps}
-                          onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            onChange(file);
-                          }}
-                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -273,7 +239,7 @@ export default function CategoriesPage() {
                   {saveLoading ? (
                     <Loader className="animate-spin size-4" />
                   ) : (
-                    "Save Category"
+                    "Save tag"
                   )}
                 </Button>
               </CardFooter>
@@ -282,13 +248,13 @@ export default function CategoriesPage() {
         </Card>
       )}
 
-      {editingCategory && (
+      {editingtag && (
         <Card>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleUpdateCategory)}>
+            <form onSubmit={form.handleSubmit(handleUpdatetag)}>
               <CardHeader>
-                <CardTitle>Edit Category</CardTitle>
-                <CardDescription>Update the category details</CardDescription>
+                <CardTitle>Edit tag</CardTitle>
+                <CardDescription>Update the tag details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -296,45 +262,10 @@ export default function CategoriesPage() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category Name</FormLabel>
+                      <FormLabel>tag Name</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. Home Cleaning" {...field} />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="image"
-                  render={({ field: { value, onChange, ...fieldProps } }) => (
-                    <FormItem>
-                      <FormLabel>Category Image</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          {...fieldProps}
-                          onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            onChange(file);
-                          }}
-                        />
-                      </FormControl>
-                      {editingCategory.image && !value && (
-                        <div className="mt-2">
-                          <p className="text-sm text-muted-foreground">
-                            Current Image:
-                          </p>
-                          <Image
-                            src={editingCategory.image}
-                            alt="Current category"
-                            width={80}
-                            height={80}
-                            className="h-20 w-20 object-cover rounded"
-                          />
-                        </div>
-                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -346,7 +277,7 @@ export default function CategoriesPage() {
                   type="button"
                   onClick={() => {
                     form.reset();
-                    setEditingCategory(null);
+                    setEditingtag(null);
                   }}
                 >
                   Cancel
@@ -355,7 +286,7 @@ export default function CategoriesPage() {
                   {saveLoading ? (
                     <Loader className="animate-spin size-4" />
                   ) : (
-                    "Update Category"
+                    "Update tag"
                   )}
                 </Button>
               </CardFooter>
@@ -364,7 +295,7 @@ export default function CategoriesPage() {
         </Card>
       )}
 
-      {/* No need for category but need to implement in other modules */}
+      {/* No need for tag but need to implement in other modules */}
       {/* <div className="flex w-full max-w-sm items-center space-x-2">
         <Input
           placeholder="Search categories..."
@@ -377,7 +308,7 @@ export default function CategoriesPage() {
           <span className="sr-only">Search</span>
         </Button>
       </div> */}
-      {categoryLoading ? (
+      {tagLoading ? (
         <div className="flex flex-grow items-center justify-center py-32">
           <Loader className="size-10 animate-spin" />
         </div>
@@ -385,7 +316,7 @@ export default function CategoriesPage() {
         <>
           <div className="rounded-md border flex flex-col">
             <Table className="flex-grow">
-              {categories?.length > 0 ? (
+              {tags?.length > 0 ? (
                 <>
                   <TableHeader>
                     <TableRow>
@@ -395,13 +326,13 @@ export default function CategoriesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {categories.map((category) => (
-                      <TableRow key={category.id}>
+                    {tags.map((tag) => (
+                      <TableRow key={tag.id}>
                         <TableCell className="font-medium">
-                          {category.name}
+                          {tag.name}
                         </TableCell>
                         <TableCell>
-                          <StatusBadge status={category.active} />
+                          <StatusBadge status={tag.active} />
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
@@ -416,32 +347,31 @@ export default function CategoriesPage() {
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => {
-                                  setEditingCategory(category);
+                                  setEditingtag(tag);
                                   form.reset({
-                                    name: category.name,
-                                    image: undefined,
+                                    name: tag.name,
                                   });
                                 }}
                               >
-                                Edit Category
+                                Edit tag
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              {category.active ? (
+                              {tag.active ? (
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    handleArchiveCategory(category.id)
+                                    handleArchivetag(tag.id)
                                   }
                                   className="text-destructive"
                                 >
-                                  Archive Category
+                                  Archive tag
                                 </DropdownMenuItem>
                               ) : (
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    handleArchiveCategory(category.id)
+                                    handleArchivetag(tag.id)
                                   }
                                 >
-                                  Activate Category
+                                  Activate tag
                                 </DropdownMenuItem>
                               )}
                             </DropdownMenuContent>
@@ -454,12 +384,12 @@ export default function CategoriesPage() {
               ) : (
                 <div className="flex-grow font-semibold flex flex-col gap-4 py-20 items-center justify-center">
                   <FolderX className="size-12" />
-                  <div>No categories found</div>
+                  <div>No tags found</div>
                 </div>
               )}
             </Table>
           </div>
-          {categories?.length > 0 && (
+          {tags?.length > 0 && (
             <Pagination>
               <PaginationContent>
                 {Array.from({ length: paginationOptions?.totalPages }).map(

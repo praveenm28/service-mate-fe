@@ -12,6 +12,7 @@ import {
   Settings,
   Star,
   Package2,
+  Tag
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -51,6 +52,11 @@ export function AdminSidebar() {
       title: "Categories",
     },
     {
+      href: "/admin/tags",
+      icon: Tag,
+      title: "Tags",
+    },
+    {
       href: "/admin/messages",
       icon: MessageSquare,
       title: "Messages",
@@ -78,8 +84,8 @@ export function AdminSidebar() {
               asChild
               variant="ghost"
               className={cn(
-                "flex h-9 items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground",
-                pathname === route.href && "bg-muted font-medium text-foreground",
+                "flex h-9 items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground justify-start pl-6",
+                pathname === route.href && "bg-muted font-medium text-foreground justify-start",
               )}
             >
               <Link href={route.href}>
