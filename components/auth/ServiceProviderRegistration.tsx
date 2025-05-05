@@ -470,7 +470,7 @@ const ServiceProviderRegistration = () => {
                                             </div>
                                         ))}
                                     </div>
-                                    {selectedCategories.length === 0 && form.formState.isSubmitted && (
+                                    {selectedCategories?.length === 0 && form.formState.isSubmitted && (
                                         <p className="text-sm font-medium text-destructive mt-1">
                                             Select at least one category
                                         </p>
